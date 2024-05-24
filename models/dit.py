@@ -1,25 +1,12 @@
-class DiffMLP(nn.Module):
-    def __init__(self, hidden_size,num_layers=2, mlp_ratio=2.0):
-        super().__init__()
-        self.blocks = nn.ModuleList([
-            DiffMLPBlock(hidden_size, mlp_ratio)
-            for _ in range(num_layers)
-        ])
-        self.timestep_embedder = TimestepEmbedder(hidden_size)
-        self.tspan = (1e-2,5.)
-        t_list = torch.linspace(self.tspan[0], self.tspan[1], 500)
-        self.register_buffer('t_list', t_list)
+from torch import nn
+import torch
+import torch.nn.functional as F
+from models.utils import weights_init, TimestepEmbedder
 
-    def forward(self, x, t, c):
-        t = self.timestep_embedder(self.t_list[t])
-        for block in self.blocks:
-            x = x + block(x,t)
-        return x
 
 
 def modulate(x, shift, scale):
     return x * (1 + scale) + shift
-
 
 class DiffMLPBlock(nn.Module):
     """
@@ -58,11 +45,25 @@ class DiffMLPBlock(nn.Module):
 
     def forward(self, x,c):   
         
-        # x = self.norm1(x)
-        # x = self.mlp1(x)
-        # x = self.norm2(x)
-        # x = self.mlp2(x)
         shift1_mlp, scale1_mlp, gate1_mlp,shift2_mlp, scale2_mlp, gate2_mlp = self.adaLN_modulation(c).chunk(6, dim=1)
         x = x + gate1_mlp * self.mlp1(modulate(self.norm1(x), shift1_mlp, scale1_mlp))
         x = x + gate2_mlp * self.mlp2(modulate(self.norm2(x), shift2_mlp, scale2_mlp))
+        return x
+    
+class DiffMLP(nn.Module):
+    def __init__(self, hidden_size,num_layers=2, mlp_ratio=2.0):
+        super().__init__()
+        self.blocks = nn.ModuleList([
+            DiffMLPBlock(hidden_size, mlp_ratio)
+            for _ in range(num_layers)
+        ])
+        self.timestep_embedder = TimestepEmbedder(hidden_size)
+        self.tspan = (1e-2,5.)
+        t_list = torch.linspace(self.tspan[0], self.tspan[1], 500)
+        self.register_buffer('t_list', t_list)
+
+    def forward(self, x, t, c):
+        t = self.timestep_embedder(self.t_list[t])
+        for block in self.blocks:
+            x = x + block(x,t)
         return x

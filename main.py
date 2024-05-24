@@ -1,3 +1,4 @@
+import hydra
 from torch.utils.data import DataLoader
 from datasets import GaussianMixtureDataset
 from utils import plot_density_from_samples,set_seed
@@ -12,8 +13,13 @@ from score import DDPMProcess
 from EMA import EMA
 
 
+@hydra.main(config_path='configs', config_name='gmm')
+def main(cfg):
 
-if __name__ == "__main__":
+
+    print(cfg)
+
+    """
 
     ########## Hyperparameters and settings ##########
     set_seed(42)
@@ -139,7 +145,8 @@ if __name__ == "__main__":
         x_gen = diff_process.generate(N=1000,y=y)
         x_gen = x_gen*data_std.to(diff_process.device) + data_mean.to(diff_process.device)
         plot_density_from_samples(x_gen.detach().cpu().numpy(), filepath=f"{plots_dir}/ddpm_samples_{y}.png", show=False, save=True,title=f"Samples for class {y}")
+    """
 
-
-
+if __name__ == "__main__":
+    main()
 
