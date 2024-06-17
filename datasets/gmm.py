@@ -70,5 +70,7 @@ class GaussianMixtureDataset(Dataset):
     
     def __getitem__(self, idx):
         return self.samples[idx], self.labels[idx]
+    def sample_labels(self):
+        return list(range(self.k))
+        
     
-

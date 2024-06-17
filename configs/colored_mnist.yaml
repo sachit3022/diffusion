@@ -1,0 +1,65 @@
+dataset:
+  _target_: datasets.ColoredMNIST
+  root_dir: /research/hal-gaudisac/Diffusion/image_gen/data
+  threshold: 0.5
+dataloader:
+  batch_size: 256
+  num_workers: 4
+  persistent_workers: True
+diffusion:
+  latent_encoding:
+    _target_: encoders.VAE
+    "_recursive_": True
+    d_in: [3,28,28]
+    d_latent: [16,7,7]
+    max_beta: 1.0e-06
+    max_epochs: 100
+    lr: 3.0e-3
+    encoder:
+      _target_: models.UnetEncoder
+      image_shape: [3, 28, 28]
+      channels:  [8,16,16]
+    decoder:
+      _target_: models.UnetDecoder
+      image_shape: [3, 28, 28]
+      channels: [16,16,3]
+  latent_encoding_checkpoint: null
+  resume_latent_encoding: false
+  train_latent_encoding:
+    max_epochs: 100
+    accelerator: 'gpu'
+    log_every_n_steps: 10
+    gradient_clip_val: 1.0
+  label_encoding:
+    _target_: encoders.LabelCLIP
+    _partial_: true
+    label_encoder:
+      _target_: models.MultiLabelEncoder
+    lr: 1.0e-2
+    d_latent:  128
+  resume_label_encoding: false
+  label_encoding_checkpoint: null
+  train_label_encoding:
+    max_epochs: 1
+    accelerator: 'gpu'
+    log_every_n_steps: 10
+    gradient_clip_val: 1.0
+  sampling:
+    d_latent: [3,28,28]
+    diffusion_model:
+      _target_: models.ConditionalUnet 
+      d_latent: [3,28,28]
+    checkpoint: null
+    lr: 3.0e-4
+  resume_sampling: true 
+  sampling_checkpoint: false
+  train_sampling:
+    max_epochs: 100
+    accelerator: 'gpu'
+    log_every_n_steps: 10
+    gradient_clip_val: 1.0
+fair_trainer:
+  max_epochs: 100
+  accelerator: 'gpu'
+  log_every_n_steps: 10
+  gradient_clip_val: 1.0

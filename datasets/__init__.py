@@ -1,1 +1,3 @@
 from datasets.gmm import GaussianMixtureDataset
+from datasets.coloredMNIST import ColoredMNIST, CounterfactualColoredMNIST
+from datasets.composionalityGaussian import ComposionalityGaussian

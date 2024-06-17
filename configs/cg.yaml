@@ -1,10 +1,8 @@
 dataset:
-  _target_: datasets.GaussianMixtureDataset
-  k: 8
+  _target_: datasets.ComposionalityGaussian
   n: 20000
-  dim: 2
 dataloader:
-  batch_size: 256
+  batch_size: 2048
   num_workers: 4
   persistent_workers: True
 diffusion:
@@ -13,20 +11,19 @@ diffusion:
     _target_: encoders.VAE
     "_recursive_": True
     d_in: 2
-    d_latent: 16
-    beta: 0.01
+    d_latent: 2
     encoder:
       _target_: models.MLPEncoder
       d_in: 2
-      d_out: 32
+      d_out: 4
       dropout: 0.1
     decoder:
       _target_: models.MLPDecoder
-      d_in: 16
+      d_in: 2
       d_out: 2
       dropout: 0.1
-  latent_encoding_checkpoint: null
   resume_latent_encoding: false
+  latent_encoding_checkpoint: null
   train_latent_encoding:
     max_epochs: 100
     accelerator: 'gpu'
@@ -34,14 +31,13 @@ diffusion:
     gradient_clip_val: 1.0
   label_encoding:
     _target_: encoders.LabelCLIP
+    _partial_: true 
     label_encoder:
-      _target_: models.MultiLabelEncoder
-      d_latent: 2
-      num_classes: 2
-      dropout: 0.1
+       _target_: models.MultiLabelEncoder2d
     d_latent: 2
     lr: 0.0001
-    checkpoint: null
+  resume_label_encoding: false
+  label_encoding_checkpoint: null
   train_label_encoding:
     max_epochs: 100
     accelerator: 'gpu'
@@ -50,19 +46,16 @@ diffusion:
   sampling:
     d_latent: 2
     diffusion_model:
-      _target_: models.ML 
+      _target_: models.TimeInputMLP 
       d_latent: 2
+      mlp_ratio: 16
+      num_layers: 8
     checkpoint: null
-    lr: 3.0e-4
-  
-
-
-  
-
-  
-
-
-
-
-
-
+    lr: 1.0e-3
+  resume_sampling: false
+  sampling_checkpoint: '/research/hal-gaudisac/Diffusion/image_gen/outputs/2024-06-17/12-53-53/lightning_logs/DDPM/version_0/checkpoints/epoch=999-step=10000.ckpt'
+  train_sampling:
+    max_epochs: 1000
+    accelerator: 'gpu'
+    log_every_n_steps: 10
+    gradient_clip_val: 1.0
